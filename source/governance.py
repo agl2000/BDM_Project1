@@ -1,19 +1,30 @@
+import data_collectors as dc
+import data_persistence_loader as dpl
+
 import happybase
 from pymongo import MongoClient
 
 
 
-def list_mongodb_collections(host, port):
+def get_mongodb_collections(host, port):
     # Connect to MongoDB
     client = MongoClient(host, port)
 
     # List available collections (tables)
-    collections = client.list_database_names()
-    print("Available collections (tables):", collections)
+    # Access the database
+    db = client['Persistent_Landing']
+
+    # List all collections in the database
+    collections = db.list_collection_names()
+
+    # Print the list of collections
+    # print("Collections in the 'Persistent_Landing' database:\n", collections)
+
 
     # Close the connection
     client.close()
 
+    return(collections)
 
 
 def create_hbase_table(host, table_name, column_families):
@@ -43,36 +54,66 @@ def main():
     mongodb_host = 'localhost'
     mongodb_port = 27017
 
+    # List collections MongoDB
+    mongodb_collections=get_mongodb_collections(mongodb_host, mongodb_port)
+    print(mongodb_collections)
+
     #Define all the Hbase variables to connect
     # HBase host
-    hbase_host = '192.168.100.166'  # Replace with your HBase host IP address
+    hbase_host = '192.168.1.112'  # Replace with your HBase host IP address
 
 
     #Ask the user what action does he want to perform
 
-    action_text= "Select what action you want to perform: \n 1. Add new data source \n 2. Consult existing tables \nEnter your choice: "
+    action_text= "Select what action you want to perform: \n 1. Add new data \n 2. Consult existing tables \nEnter your choice: "
 
     action=input(action_text)
 
-    if action=='1':
-        action_text= "\nSelect the origin of the new data source you want to add:\n 1. REST API\n 2. File System\nEnter your choice: "
-        action=input(action_text)
-        if action=='1':
-            print("Afegir des d'una API")
-        elif action=='2':
-            print("Afegir des d'un File System")
+    if action == '1':
+        action_text = "\nSelect the source of the new data you want to add:\n 1. REST API\n 2. File System\nEnter your choice: "
+        action = input(action_text)
+
+        if action == '1':
+            print("Adding data from a REST API")
             
-        else: print("Wrong input")
+        elif action == '2':
+            action_text = "\nInsert the folder URL: "
+            folder_url = input(action_text)
+
+            print("\nSelect the name of the dataset from the list in MongoDB:")
+
+            i=1
+            for collection in mongodb_collections:
+                print(" ",i,". ", collection)
+                i=i+1
+            
+            print(" ",i,". ","NEW DATABASE")
+
+            num=int(input("Enter your choice: "))
+
+            if num==i:
+                dataset_name="new"
+
+            else:
+                dataset_name = mongodb_collections[num-1]
+
+            print(dataset_name)
+            
+            #Read a hole folder from local
+            # dc.read_folder_to_hbase(folder_url,dataset_name)
+            # print("Adding data from a File System")
+
+        else:
+            print("Wrong input")
 
     elif action == '2':
-        print("Consultar taules existents")
-    
-    else: print("Wrong input")
+        print("Consulting existing tables")
 
+    else:
+        print("Wrong input")
  
 
-    # List collections
-    list_mongodb_collections(mongodb_host, mongodb_port)
+    
 
 
 
@@ -99,7 +140,7 @@ def main():
 
 
     # # Connect to HBase
-    # connection = happybase.Connection('192.168.100.166', port=2181)  # Assuming default HBase Thrift server port is 9090
+    # connection = happybase.Connection('192.168.1.112', port=9090)  # Assuming default HBase Thrift server port is 9090
     # connection.open()
 
     # # List available tables
