@@ -1,18 +1,16 @@
 import data_collectors as dc
 import data_persistence_loader as dpl
-
-import happybase
-from pymongo import MongoClient
-
+import os
+import pymongo
 
 
-def get_mongodb_collections(host, port):
+def get_mongodb_collections(host, port, database_name):
     # Connect to MongoDB
-    client = MongoClient(host, port)
+    client = pymongo.MongoClient(host, port)
 
     # List available collections (tables)
     # Access the database
-    db = client['Persistent_Landing']
+    db = client[database_name]
 
     # List all collections in the database
     collections = db.list_collection_names()
@@ -27,23 +25,39 @@ def get_mongodb_collections(host, port):
     return(collections)
 
 
-def create_hbase_table(host, table_name, column_families):
-    # Connect to HBase
-    connection = happybase.Connection(host, port=9090)
-    connection.open()
 
-    # Check if the table already exists
-    # if table_name.encode() in connection.tables():
-    #     print(f"Table '{table_name}' already exists.")
-    #     return
+def add_new_mongo_collection(host,port,database_name,collection_name):
+    # Connect to MongoDB
+    client = pymongo.MongoClient(host, port)  # Replace 'localhost' with your MongoDB server's address if it's different
+    db = client[database_name]
 
-    # Create the table
-    connection.create_table(table_name, column_families)
+    # Create a new collection
+    db.create_collection(collection_name)
 
     # Close the connection
-    connection.close()
+    client.close()
 
-    print(f"Table '{table_name}' created successfully.")
+    # print("Collection '{}' created successfully in the database '{}'".format(collection_name, database_name))
+
+
+
+# def create_hbase_table(host, table_name, column_families):
+#     # Connect to HBase
+#     connection = happybase.Connection(host, port=9090)
+#     connection.open()
+
+#     # Check if the table already exists
+#     # if table_name.encode() in connection.tables():
+#     #     print(f"Table '{table_name}' already exists.")
+#     #     return
+
+#     # Create the table
+#     connection.create_table(table_name, column_families)
+
+#     # Close the connection
+#     connection.close()
+
+#     print(f"Table '{table_name}' created successfully.")
 
 
 
@@ -53,14 +67,16 @@ def main():
     # MongoDB host and port
     mongodb_host = 'localhost'
     mongodb_port = 27017
+    database_name="Persistent_Landing"
 
     # List collections MongoDB
-    mongodb_collections=get_mongodb_collections(mongodb_host, mongodb_port)
-    print(mongodb_collections)
+    mongodb_collections=get_mongodb_collections(mongodb_host, mongodb_port, database_name)
+    # print(mongodb_collections)
 
     #Define all the Hbase variables to connect
     # HBase host
-    hbase_host = '192.168.1.112'  # Replace with your HBase host IP address
+    hbase_host = '192.168.100.166'  # Replace with your HBase host IP address
+    hbase_port = 9090
 
 
     #Ask the user what action does he want to perform
@@ -78,7 +94,12 @@ def main():
             
         elif action == '2':
             action_text = "\nInsert the folder URL: "
+            
             folder_url = input(action_text)
+
+            while not os.path.exists(folder_url):
+                print("This url does not exist")
+                folder_url = input(action_text)
 
             print("\nSelect the name of the dataset from the list in MongoDB:")
 
@@ -92,12 +113,17 @@ def main():
             num=int(input("Enter your choice: "))
 
             if num==i:
-                dataset_name="new"
+                name=input("Enter the name of the new dataset: ")
+                dataset_name=name
+                add_new_mongo_collection(mongodb_host,mongodb_port,database_name,name)
+
 
             else:
                 dataset_name = mongodb_collections[num-1]
 
-            print(dataset_name)
+            dc.add_folder_files_to_hbase(dataset_name,folder_url,hbase_host, hbase_port)
+
+            print("Files Succesfully added!")
             
             #Read a hole folder from local
             # dc.read_folder_to_hbase(folder_url,dataset_name)
