@@ -9,5 +9,5 @@ def read_file_system(folder):
     print(onlyfiles)
 
 
-folder=input("Write the folder the files are saved in: ")
-read_file_system(folder)
+    folder=input("Write the folder the files are saved in: ")
+    read_file_system(folder)
