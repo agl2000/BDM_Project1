@@ -2,6 +2,7 @@ import os
 import happybase
 import pandas as pd
 import json
+import urllib3
 
 # Function to load data from a CSV file into an HBase table
 def load_csv_to_hbase(path, table_name, connection): #We need to input the path of the filem the name we want to give it in hbase and the hbase conection
@@ -77,3 +78,9 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
 
 
     connection.close()# Close the connection
+
+def add_files_from_api():
+    url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3&limit=5'
+    resp = urllib3.request("GET",url)
+    data=json.loads(resp.data.decode('utf-8'))
+    print(data['result']['records'])

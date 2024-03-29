@@ -90,7 +90,7 @@ def main():
         action = input(action_text)
 
         if action == '1':
-            print("Adding data from a REST API")
+            dc.add_files_from_api()
             
         elif action == '2':
             action_text = "\nInsert the folder URL: "
