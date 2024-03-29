@@ -60,7 +60,9 @@ def main():
 
     #Define all the Hbase variables to connect
     # HBase host
-    hbase_host = '192.168.1.112'  # Replace with your HBase host IP address
+    #hbase_host = '192.168.1.112'  # Replace with your HBase host IP address
+    hbase_host = '192.168.1.47'  # Replace with your HBase host IP address
+
 
 
     #Ask the user what action does he want to perform
