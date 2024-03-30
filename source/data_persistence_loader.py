@@ -52,7 +52,7 @@ def from_hbase_to_mongo(mongo_database_name,mongo_host,mongo_port, hbase_host, h
     # Get all the table names of hbase
     for table_name in connection.tables():
         table_name_str = table_name.decode('utf-8') #decode the name
-        print(table_name_str) 
+         
 
         if table_name_str.startswith('csv_table_'): #if the table detected is a csv
 
@@ -78,6 +78,7 @@ def from_hbase_to_mongo(mongo_database_name,mongo_host,mongo_port, hbase_host, h
             # except ValueError as e:
             #     print(f"Error al procesar la fecha del nombre de la tabla {table_name_str}: {e}")
 
+        print(table_name_str + " added to Persistent Landing")
     # Close connections
     connection.close()
     mongo_client.close()

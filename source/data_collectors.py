@@ -70,13 +70,13 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
         if file.endswith(".csv"): # Check if the file is a CSV
             table_name = 'csv_table_' + dataset_name + "." + file.replace('.csv', '').replace(' ', '_').lower() #Create a new table name for the CSV file
             load_csv_to_hbase(file_path, table_name, connection) #Load the CSV  into HBase with this name
-            print("file "+ file + " added")
+            print("file "+ file + " added to Temporal Landing")
             
         
         elif file.endswith(".json"): # Check if the file is a JSON
             table_name = 'json_table_' + dataset_name + "." + file.replace('.json', '').replace(' ', '_').lower() #Create a new table name for the json file
             load_json_to_hbase(file_path, table_name, connection) #Load the json  into HBase with this name
-            print("file "+ file + " added")
+            print("file "+ file + " added to Temporal Landing")
 
 
     connection.close()# Close the connection

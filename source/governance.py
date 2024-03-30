@@ -2,6 +2,7 @@ import data_collectors as dc
 import data_persistence_loader as dpl
 import os
 import pymongo
+import happybase
 
 
 def get_mongodb_collections(host, port, database_name):
@@ -75,7 +76,7 @@ def main():
 
     #Define all the Hbase variables to connect
     # HBase host
-    hbase_host = '192.168.100.166'  # Replace with your HBase host IP address
+    hbase_host = '192.168.100.169'  # Replace with your HBase host IP address
     hbase_port = 9090
 
 
@@ -134,6 +135,14 @@ def main():
         
         dpl.from_hbase_to_mongo(database_name,mongodb_host,mongodb_port, hbase_host, hbase_port)
         print("Files Succesfully added to persistent landing!")
+
+        connection = happybase.Connection(hbase_host,hbase_port)
+        for table_name in connection.tables():
+            connection.disable_table(table_name)
+            connection.delete_table(table_name)
+            print(f"Table '{table_name}' deleted from Temporal Landing")
+
+        connection.close()
 
     elif action == '2':
         print("Consulting existing tables")
