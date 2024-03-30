@@ -41,7 +41,9 @@ def process_json(connection, db, table_name, dataset_name):
 
 
 
+
 def from_hbase_to_mongo(mongo_database_name,mongo_dataset_name,mongo_host,mongo_port, hbase_host, hbase_port):
+
     # Connection to HBase
     connection = happybase.Connection(hbase_host, hbase_port)
 
@@ -60,11 +62,13 @@ def from_hbase_to_mongo(mongo_database_name,mongo_dataset_name,mongo_host,mongo_
             dot_index = table_name_str.find('.')
 
             # Extract the part before the first '.' and after 'csv_table_'
+
             # dataset_name = table_name_str[table_name_str.find('csv_table_') + len('csv_table_'):dot_index]
             # print(dataset_name)
             # year = int(table_name_str.split('_')[2]) #Get the year of the name
 
             process_csv(connection, db, table_name_str,mongo_dataset_name)  #execute the function to load all table into mongo
+
 
         elif table_name_str.startswith('json_table_'): #if the table detected is a csv
             
@@ -72,13 +76,17 @@ def from_hbase_to_mongo(mongo_database_name,mongo_dataset_name,mongo_host,mongo_
                 # date_parts = table_name_str.split('_')[2:5]  #Get the date
                 # date_str = '_'.join(date_parts)
             dot_index = table_name_str.find('.')
+
             # dataset_name = table_name_str[table_name_str.find('json_table_') + len('json_table_'):dot_index]
             # print(dataset_name)
             process_json(connection, db, table_name_str, mongo_dataset_name)  #execute the function to load all table into mongo
+
             # except ValueError as e:
             #     print(f"Error al procesar la fecha del nombre de la tabla {table_name_str}: {e}")
 
         print(table_name_str + " added to Persistent Landing")
     # Close connections
     connection.close()
+
     mongo_client.close()
+

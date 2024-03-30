@@ -5,6 +5,32 @@ import pymongo
 import happybase
 
 
+
+def consult_temporal_landing(host,port):
+    connection = happybase.Connection(host, port=port)
+    print(connection.tables())
+
+
+def consult_persistent_landing(host,port):
+    client = pymongo.MongoClient(host, port)
+    for db in client.list_database_names():
+        print(db)
+        database= client[db]
+        collections = database.list_collection_names()
+        for coll in collections:
+            print("   "+coll)
+            # collection=database[coll]
+            # cursor=collection.find()
+            # for document in cursor:
+            #     print(document["name"])
+
+
+
+
+
+
+
+
 def get_mongodb_collections(host, port, database_name):
     # Connect to MongoDB
     client = pymongo.MongoClient(host, port)
@@ -78,6 +104,7 @@ def main():
     # HBase host
     #hbase_host = '192.168.100.169'  # Replace with your HBase host IP address
     hbase_host = '192.168.1.47'  # Replace with your HBase host IP address
+
     hbase_port = 9090
 
 
@@ -151,7 +178,9 @@ def main():
         else:
             print("Wrong input")
         
+
         dpl.from_hbase_to_mongo(database_name,dataset_name,mongodb_host,mongodb_port, hbase_host, hbase_port)
+
         print("Files Succesfully added to persistent landing!")
 
         connection = happybase.Connection(hbase_host,hbase_port)
@@ -163,7 +192,18 @@ def main():
         connection.close()
 
     elif action == '2':
-        print("Consulting existing tables")
+        
+        action_text= "Select what database you want to consult: \n 1. Temporal Landing \n 2. Persistent Landing \nEnter your choice: "
+
+        action=input(action_text)
+
+        if action=='1':
+            # print("consultar temporal landing")
+            consult_temporal_landing(hbase_host,hbase_port)
+        elif action=='2':
+            # print("Consultar persistent landing")
+            consult_persistent_landing(mongodb_host,mongodb_port)
+        else: print("Wrong input")
 
     else:
         print("Wrong input")

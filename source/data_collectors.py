@@ -38,7 +38,7 @@ def handle_existing_table(table_name, connection):
     encoded_table_name = table_name.encode('utf-8') #we have to use the encoded name to delete the table, if not it wont delete it 
 
     if encoded_table_name in connection.tables(): #If we have a table with the same exact name
-        user_choice = input(f"Table '{table_name}' already exists. Type 1 to keep the original, 2 to replace: ")
+        user_choice = input(f"Table '{table_name}' already exists in temporal landing. Type 1 to keep the original, 2 to replace: ")
         if user_choice == '2': #If we want to delete it
             connection.disable_table(encoded_table_name)
             connection.delete_table(encoded_table_name)
@@ -70,11 +70,13 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
         if file.endswith(".csv"): # Check if the file is a CSV
             table_name = 'csv_table_' + dataset_name + "." + file.replace('.csv', '').replace(' ', '_').lower() #Create a new table name for the CSV file
             load_csv_to_hbase(file_path, table_name, connection) #Load the CSV  into HBase with this name
+            print("file "+ file + " added to Temporal Landing")
             
         
         elif file.endswith(".json"): # Check if the file is a JSON
             table_name = 'json_table_' + dataset_name + "." + file.replace('.json', '').replace(' ', '_').lower() #Create a new table name for the json file
             load_json_to_hbase(file_path, table_name, connection) #Load the json  into HBase with this name
+            print("file "+ file + " added to Temporal Landing")
 
 
     connection.close()# Close the connection
