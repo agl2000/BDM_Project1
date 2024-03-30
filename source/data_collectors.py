@@ -79,8 +79,32 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
 
     connection.close()# Close the connection
 
+
+
 def add_files_from_api():
+
+    #
+    http = urllib3.PoolManager()
     url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3&limit=5'
-    resp = urllib3.request("GET",url)
+    resp = http.request("GET",url)
     data=json.loads(resp.data.decode('utf-8'))
-    print(data['result']['records'])
+    real_data=(data['result']['records'])
+    table_name='json_table_API_table' #mirar aixo
+    connection = happybase.Connection('192.168.1.47', port=9090)
+
+
+    df_json = pd.DataFrame(real_data)# Convert JSON data into a DataFrame
+    if not handle_existing_table(table_name, connection):
+        return
+    
+    # Acceder a la tabla en HBase
+    table = connection.table(table_name)
+    
+    # Iterar sobre las filas del DataFrame e insertar cada una en HBase
+    for index, row in df_json.iterrows():
+        row_key = str(index).encode('utf-8')
+        data_to_insert = {f"info:{col}".encode('utf-8'): str(value).encode('utf-8') for col, value in row.items()}
+        table.put(row_key, data_to_insert)  # Insertar los datos en la tabla HBase
+
+    # Cerrar la conexión con HBase
+    connection.close()
