@@ -123,7 +123,7 @@ def main():
 
             dc.add_folder_files_to_hbase(dataset_name,folder_url,hbase_host, hbase_port)
 
-            print("Files Succesfully added!")
+            print("Files Succesfully added to temporal landing!")
             
             #Read a hole folder from local
             # dc.read_folder_to_hbase(folder_url,dataset_name)
@@ -131,6 +131,9 @@ def main():
 
         else:
             print("Wrong input")
+        
+        dpl.from_hbase_to_mongo(database_name,mongodb_host,mongodb_port, hbase_host, hbase_port)
+        print("Files Succesfully added to persistent landing!")
 
     elif action == '2':
         print("Consulting existing tables")
