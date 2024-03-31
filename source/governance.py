@@ -26,6 +26,25 @@ def consult_persistent_landing(host,port):
 
 
 
+def get_data_from_collection(host, port, database_name, collection_name):
+    # Establecer la conexión a MongoDB
+    client = pymongo.MongoClient(host, port)
+    db = client[database_name]
+
+    # Acceder a la colección
+    collection = db[collection_name]
+
+    # Recuperar todos los documentos dentro de la colección
+    documents = collection.find().limit(10)
+
+    # Iterar sobre los documentos e imprimirlos
+    for document in documents:
+        print(document)
+
+    # Cerrar la conexión
+    client.close()
+
+
 
 
 
@@ -203,6 +222,16 @@ def main():
         elif action=='2':
             # print("Consultar persistent landing")
             consult_persistent_landing(mongodb_host,mongodb_port)
+
+            print("\nSelect a databaset to consult from the persistent Landing: ")
+            i=1
+            for collection in mongodb_collections:
+                print(" ",i,". ", collection)
+                i=i+1
+            num=int(input("Enter your choice: "))
+            dataset_name = mongodb_collections[num-1]
+              
+            get_data_from_collection(mongodb_host, mongodb_port, database_name, dataset_name)
         else: print("Wrong input")
 
     else:
@@ -211,49 +240,5 @@ def main():
 
     
 
-
-
-
-
-
-
-    
-
-    # # Table name
-    # table_name = 'your_table_name'
-
-    # # Column families (specify as a dictionary where keys are column family names and values are configuration options)
-    # column_families = {
-    #     'cf1': {},  # Change 'cf1' to the desired column family name
-    #     'cf2': {}   # Add more column families as needed
-    # }
-
-    # # Create the table
-    # create_hbase_table(hbase_host, table_name, column_families)
-
-
-
-
-
-    # # Connect to HBase
-    # connection = happybase.Connection('192.168.1.112', port=9090)  # Assuming default HBase Thrift server port is 9090
-    # connection.open()
-
-    # # List available tables
-    # tables = connection.tables()
-    # print("Available tables:", tables)
-
-    # # Choose a table to scan
-    # table_name = 'your_table_name_here'
-
-    # # Scan the table and print the rows
-    # table = connection.table(table_name)
-    # print(f"Scanning table '{table_name}':")
-    # for key, data in table.scan():
-    #     print(f"Row key: {key}, Data: {data}")
-
-    # # Close the connection
-    # connection.close()
-
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()

@@ -87,7 +87,7 @@ def add_files_from_api():
 
     #
     http = urllib3.PoolManager()
-    url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3&limit=5'
+    url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
     resp = http.request("GET",url)
     data=json.loads(resp.data.decode('utf-8'))
     real_data=(data['result']['records'])
