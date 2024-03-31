@@ -83,16 +83,16 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
 
 
 
-def add_files_from_api():
+def add_files_from_api(host,port,url):
 
     #
     http = urllib3.PoolManager()
-    url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
+    # url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
     resp = http.request("GET",url)
     data=json.loads(resp.data.decode('utf-8'))
     real_data=(data['result']['records'])
     table_name='json_table_API_table' #mirar aixo
-    connection = happybase.Connection('192.168.1.47', port=9090)
+    connection = happybase.Connection(host, port=port)
 
 
     df_json = pd.DataFrame(real_data)# Convert JSON data into a DataFrame

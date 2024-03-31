@@ -5,6 +5,29 @@ import pymongo
 import happybase
 
 
+def delete_data_from_collection(host, port, database_name, collection_name):
+    # Establish a connection to MongoDB
+    client = pymongo.MongoClient(host, port)
+    db = client[database_name]
+
+    # Delete the collection
+    db[collection_name].drop()
+
+    print("Collection '{}' deleted successfully.".format(collection_name))
+
+    # Cerrar la conexión
+    client.close()
+
+
+def delete_temporal_database(hbase_host, hbase_port):
+    connection = happybase.Connection(hbase_host,hbase_port)
+    for table_name in connection.tables():
+        connection.disable_table(table_name)
+        connection.delete_table(table_name)
+        print(f"Table '{table_name}' deleted from Temporal Landing")
+
+    connection.close()
+
 
 def consult_temporal_landing(host,port):
     connection = happybase.Connection(host, port=port)
@@ -121,15 +144,15 @@ def main():
 
     #Define all the Hbase variables to connect
     # HBase host
-    #hbase_host = '192.168.100.169'  # Replace with your HBase host IP address
-    hbase_host = '192.168.1.47'  # Replace with your HBase host IP address
+    hbase_host = '192.168.100.169'  # Replace with your HBase host IP address
+    # hbase_host = '192.168.1.47'  # Replace with your HBase host IP address
 
     hbase_port = 9090
 
 
     #Ask the user what action does he want to perform
 
-    action_text= "Select what action you want to perform: \n 1. Add new data \n 2. Consult existing tables \nEnter your choice: "
+    action_text= "Select what action you want to perform: \n 1. Add new data \n 2. Consult existing tables \n 3. Delete tables\nEnter your choice: "
 
     action=input(action_text)
 
@@ -138,7 +161,12 @@ def main():
         action = input(action_text)
 
         if action == '1':
-            dc.add_files_from_api()
+            action_text = "\nInsert the URL (insert 0 if you want the default):  "
+            action=input(action_text)
+            if action == '0': 
+                url='https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
+            else: url = action
+            dc.add_files_from_api(hbase_host,hbase_port,url)
             print("\nSelect the name of the COLLECTION from the list in MongoDB:")
 
             i=1
@@ -193,7 +221,6 @@ def main():
 
             print("Files Succesfully added to temporal landing!")
 
-
         else:
             print("Wrong input")
         
@@ -202,13 +229,8 @@ def main():
 
         print("Files Succesfully added to persistent landing!")
 
-        connection = happybase.Connection(hbase_host,hbase_port)
-        for table_name in connection.tables():
-            connection.disable_table(table_name)
-            connection.delete_table(table_name)
-            print(f"Table '{table_name}' deleted from Temporal Landing")
-
-        connection.close()
+        delete_temporal_database(hbase_host, hbase_port)
+        
 
     elif action == '2':
         
@@ -223,7 +245,7 @@ def main():
             # print("Consultar persistent landing")
             consult_persistent_landing(mongodb_host,mongodb_port)
 
-            print("\nSelect a databaset to consult from the persistent Landing: ")
+            print("\nSelect a databaset to consult from the persistent Landing: (0 to exit)")
             i=1
             for collection in mongodb_collections:
                 print(" ",i,". ", collection)
@@ -234,6 +256,25 @@ def main():
             get_data_from_collection(mongodb_host, mongodb_port, database_name, dataset_name)
         else: print("Wrong input")
 
+    elif action == '3':
+        print("delete tables")
+        action_text= "Select from what database you want to delete: \n 1. Temporal Landing \n 2. Persistent Landing \nEnter your choice: "
+
+        action=input(action_text)
+
+        if action=='1':
+            delete_temporal_database(hbase_host,hbase_port)
+        elif action=='2':
+            print("\nSelect a databaset to consult from the persistent Landing: ")
+            i=1
+            for collection in mongodb_collections:
+                print(" ",i,". ", collection)
+                i=i+1
+            num=int(input("Enter your choice: "))
+            dataset_name = mongodb_collections[num-1]
+              
+            delete_data_from_collection(mongodb_host, mongodb_port, database_name, dataset_name)
+        else: print("Wrong input")
     else:
         print("Wrong input")
  
