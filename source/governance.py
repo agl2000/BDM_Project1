@@ -5,6 +5,21 @@ import pymongo
 import happybase
 
 
+#Define all the MongoDB variables to connect
+# MongoDB host and port
+mongodb_host = 'localhost'
+mongodb_port = 27017
+
+#Default name for mongo_db database
+database_name="Persistent_Landing"
+
+
+#Define all the Hbase variables to connect
+# HBase host
+hbase_host = '192.168.1.41'  # Replace with your HBase host IP address
+hbase_port = 9090
+
+
 def delete_data_from_collection(host, port, database_name, collection_name):
     # Establish a connection to MongoDB
     client = pymongo.MongoClient(host, port)
@@ -73,9 +88,9 @@ def get_data_from_collection(host, port, database_name, collection_name):
 
 
 
-def get_mongodb_collections(host, port, database_name):
+def get_mongodb_collections():
     # Connect to MongoDB
-    client = pymongo.MongoClient(host, port)
+    client = pymongo.MongoClient(mongodb_host, mongodb_port)
 
     # List available collections (tables)
     # Access the database
@@ -111,59 +126,59 @@ def add_new_mongo_collection(host,port,database_name,collection_name):
 
 
 
+def ask_collection(mongodb_collections):
+    print("\nSelect the name of the COLLECTION from the list in MongoDB:") #Ask in which collection wants to add this data
+
+    i=1
+    for collection in mongodb_collections:
+        print(" ",i,". ", collection)
+        i=i+1
+    
+    print(" ",i,". ","NEW DATABASE") #Select new collection or existing one
+
+    num=int(input("Enter your choice: "))
+
+    if num==i: #If we pick a new collection, write its name
+        name=input("Enter the name of the new COLLECTION: ")
+        dataset_name=name
+        add_new_mongo_collection(mongodb_host,mongodb_port,database_name,name)
+
+
+    else:
+        dataset_name = mongodb_collections[num-1]
+
+    return dataset_name
+
+
+
+
+
+
 def main():
-    #Define all the MongoDB variables to connect
-    # MongoDB host and port
-    mongodb_host = 'localhost'
-    mongodb_port = 27017
-    database_name="Persistent_Landing"
 
-    # List of collections MongoDB
-    mongodb_collections=get_mongodb_collections(mongodb_host, mongodb_port, database_name)
-
-    #Define all the Hbase variables to connect
-    # HBase host
-    hbase_host = '192.168.1.47'  # Replace with your HBase host IP address
-    hbase_port = 9090
-
+    # List of collections in MongoDB
+    mongodb_collections=get_mongodb_collections()
 
     #Ask the user what action does he want to perform
     action_text= "Select what action you want to perform: \n 1. Add new data \n 2. Consult existing tables \n 3. Delete tables\nEnter your choice: "
-
     action=input(action_text)
-
 
     if action == '1': #If the user decides to add data
         action_text = "\nSelect the source of the new data you want to add:\n 1. REST API\n 2. File System\nEnter your choice: "
         action = input(action_text) #ask if the data is from API or local system
 
-        if action == '1': #From the API
-            action_text = "\nInsert the URL (insert 0 if you want the default):  "
+        if action == '1': #From the APIs
+            action_text = "\nInsert the URL (insert 0 if you want the default API):  "
             action=input(action_text)
             if action == '0': 
                 url='https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
             else: url = action
-            dc.add_files_from_api(hbase_host,hbase_port,url) #Get API files from the url and load them into Hbase
-            print("\nSelect the name of the COLLECTION from the list in MongoDB:") #Ask in which collection want to add this data
 
-            i=1
-            for collection in mongodb_collections:
-                print(" ",i,". ", collection)
-                i=i+1
-            
-            print(" ",i,". ","NEW DATABASE") #Select new collection or existing one
+            #Ask what collection of mongodb does the user want to insert the files
+            dataset_name=ask_collection(mongodb_collections)
 
-            num=int(input("Enter your choice: "))
-
-            if num==i: #If we pick a new collection, write its name
-                name=input("Enter the name of the new COLLECTION: ")
-                dataset_name=name
-                add_new_mongo_collection(mongodb_host,mongodb_port,database_name,name)
-
-
-            else:
-                dataset_name = mongodb_collections[num-1]
-            
+            dc.add_files_from_api(dataset_name,hbase_host,hbase_port,url) #Get API files from the url and load them into Hbase
+            print("Files Succesfully added to temporal landing!")
 
         elif action == '2': #if the data to be added is from local system
             action_text = "\nInsert the folder URL: "
@@ -174,25 +189,8 @@ def main():
                 print("This url does not exist")
                 folder_url = input(action_text)
 
-            print("\nSelect the name of the COLLECTION from the list in MongoDB:")
-
-            i=1
-            for collection in mongodb_collections: #Then select the collection in mongodb this data will be added
-                print(" ",i,". ", collection)
-                i=i+1
-            
-            print(" ",i,". ","NEW DATABASE")
-
-            num=int(input("Enter your choice: "))
-
-            if num==i: #If the user choses a new collection, ask for the name
-                name=input("Enter the name of the new COLLECTION: ")
-                dataset_name=name
-                add_new_mongo_collection(mongodb_host,mongodb_port,database_name,name)
-
-
-            else:
-                dataset_name = mongodb_collections[num-1]
+            #Ask what collection of mongodb does the user want to insert the files
+            dataset_name=ask_collection(mongodb_collections)
 
             dc.add_folder_files_to_hbase(dataset_name,folder_url,hbase_host, hbase_port) #then add all the files from the folder into hbase
 
@@ -202,7 +200,7 @@ def main():
             print("Wrong input")
         
 
-        dpl.from_hbase_to_mongo(database_name,dataset_name,mongodb_host,mongodb_port, hbase_host, hbase_port) #once are in the temporal zone, add them into persistent zone
+        dpl.from_hbase_to_mongo(database_name,mongodb_host,mongodb_port, hbase_host, hbase_port) #once are in the temporal zone, add them into persistent zone
 
         print("Files Succesfully added to persistent landing!")
 
@@ -220,7 +218,7 @@ def main():
         elif action=='2': #consult the persistent landing
             consult_persistent_landing(mongodb_host,mongodb_port)
             
-            print("\nSelect a databaset to consult from the persistent Landing: (0 to exit)")
+            print("\nSelect a databaset to consult from the persistent Landing: ")
             i=1 #inside the dataset pick the collection to consult
             for collection in mongodb_collections:
                 print(" ",i,". ", collection)

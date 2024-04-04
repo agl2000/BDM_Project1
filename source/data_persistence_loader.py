@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 # To load the csv
-def process_csv(connection, db, table_name, dataset_name): #ask the connection to hbase, the database, the collection name and the table name
+def process_csv(connection, db, table_name,dataset_name): #ask the connection to hbase, the database, the collection name and the table name
     table = connection.table(table_name)    #get the table in hbase
     collection = db[dataset_name]   #Get a collection we will insert the data
     
@@ -21,7 +21,8 @@ def process_csv(connection, db, table_name, dataset_name): #ask the connection t
 
 
 # To load jsons files
-def process_json(connection, db, table_name, dataset_name):
+def process_json(connection, db, table_name,dataset_name):
+
     table = connection.table(table_name) #get the table name from hbase
     collection = db[dataset_name] #get the collection name 
     
@@ -42,7 +43,7 @@ def process_json(connection, db, table_name, dataset_name):
 
 
 
-def from_hbase_to_mongo(mongo_database_name,mongo_dataset_name,mongo_host,mongo_port, hbase_host, hbase_port):
+def from_hbase_to_mongo(mongo_database_name,mongo_host,mongo_port, hbase_host, hbase_port):
 
     # Connection to HBase
     connection = happybase.Connection(hbase_host, hbase_port)
@@ -55,18 +56,19 @@ def from_hbase_to_mongo(mongo_database_name,mongo_dataset_name,mongo_host,mongo_
     for table_name in connection.tables():
         table_name_str = table_name.decode('utf-8') #decode the name
          
+        # Find the index of the first occurrence of '.' from the start
+        dot_index = table_name_str.find('.')
 
         if table_name_str.startswith('csv_table_'): #if the table detected is a csv
 
-            # Find the index of the first occurrence of '.' from the end
-            dot_index = table_name_str.find('.')
-
-            process_csv(connection, db, table_name_str,mongo_dataset_name)  #execute the function to load all table into mongo
+            dataset_name=table_name_str[len("csv_table_"):dot_index]
+            process_csv(connection, db, table_name_str,dataset_name)  #execute the function to load all table into mongo
 
 
         elif table_name_str.startswith('json_table_'): #if the table detected is a csv           
-            dot_index = table_name_str.find('.')
-            process_json(connection, db, table_name_str, mongo_dataset_name)  #execute the function to load all table into mongo
+
+            dataset_name=table_name_str[len("json_table_"):dot_index]
+            process_json(connection, db, table_name_str,dataset_name)  #execute the function to load all table into mongo
 
         print(table_name_str + " added to Persistent Landing")
     # Close connections

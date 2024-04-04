@@ -81,7 +81,7 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
 
 
 
-def add_files_from_api(host,port,url):
+def add_files_from_api(dataset_name,host,port,url):
 
     #
     http = urllib3.PoolManager()
@@ -89,7 +89,7 @@ def add_files_from_api(host,port,url):
     resp = http.request("GET",url)
     data=json.loads(resp.data.decode('utf-8'))
     real_data=(data['result']['records'])
-    table_name='json_table_API_table' 
+    table_name= 'json_table_' + dataset_name + "." + "api_file" #Create a new table name for the json file 
     connection = happybase.Connection(host, port=port)
 
 
@@ -97,7 +97,7 @@ def add_files_from_api(host,port,url):
     if not handle_existing_table(table_name, connection):
         return
     
-    # Get the tanle name from hbase
+    # Get the table name from hbase
     table = connection.table(table_name)
     
     # Loop trough the json rows and add them to hbase
