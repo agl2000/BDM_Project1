@@ -56,8 +56,6 @@ def handle_existing_table(table_name, connection):
 
 
 
-
-
 def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
     
     # Create connection with HBase
@@ -83,30 +81,30 @@ def add_folder_files_to_hbase(dataset_name,path, hbase_host, hbase_port):
 
 
 
-def add_files_from_api():
+def add_files_from_api(host,port,url):
 
     #
     http = urllib3.PoolManager()
-    url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
+    # url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?resource_id=d7cf9683-5e2d-4b7b-8602-0bc5073f1dc3'
     resp = http.request("GET",url)
     data=json.loads(resp.data.decode('utf-8'))
     real_data=(data['result']['records'])
-    table_name='json_table_API_table' #mirar aixo
-    connection = happybase.Connection('192.168.1.47', port=9090)
+    table_name='json_table_API_table' 
+    connection = happybase.Connection(host, port=port)
 
 
     df_json = pd.DataFrame(real_data)# Convert JSON data into a DataFrame
     if not handle_existing_table(table_name, connection):
         return
     
-    # Acceder a la tabla en HBase
+    # Get the tanle name from hbase
     table = connection.table(table_name)
     
-    # Iterar sobre las filas del DataFrame e insertar cada una en HBase
+    # Loop trough the json rows and add them to hbase
     for index, row in df_json.iterrows():
-        row_key = str(index).encode('utf-8')
+        row_key = str(index).encode('utf-8') #important, to decode if not, it wont show data
         data_to_insert = {f"info:{col}".encode('utf-8'): str(value).encode('utf-8') for col, value in row.items()}
-        table.put(row_key, data_to_insert)  # Insertar los datos en la tabla HBase
+        table.put(row_key, data_to_insert)  # Insert into hbase
 
-    # Cerrar la conexión con HBase
+    # Close connection
     connection.close()

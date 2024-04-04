@@ -7,31 +7,31 @@ from datetime import datetime
 
 
 # To load the csv
-def process_csv(connection, db, table_name, dataset_name):
+def process_csv(connection, db, table_name, dataset_name): #ask the connection to hbase, the database, the collection name and the table name
     table = connection.table(table_name)    #get the table in hbase
-    collection = db[dataset_name]   #Get a collection called opendatabcn-income, we should a except try to check if there is
+    collection = db[dataset_name]   #Get a collection we will insert the data
     
     #Scan of each row of the data stored in hbase table
     for key, data in table.scan():
         document = { #for each row we create a document
-            'name': dataset_name + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),  #with the id the year
+            'name': dataset_name + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),  #with the id the year, and date the data has been added
             'data': {k.decode('utf-8'): v.decode('utf-8') for k, v in data.items()} #the rest of the data
         }
-        collection.insert_one(document) #insert the documento into mongo
+        collection.insert_one(document) #insert the document into mongo
 
 
-# To load jsons
+# To load jsons files
 def process_json(connection, db, table_name, dataset_name):
-    table = connection.table(table_name)
-    collection = db[dataset_name]
+    table = connection.table(table_name) #get the table name from hbase
+    collection = db[dataset_name] #get the collection name 
     
-    for key, data in table.scan():
+    for key, data in table.scan(): #scan the json in hbase
         # Get all the info of each row of the json in hbase
         property_data = {k.decode('utf-8').split(':')[1]: v.decode('utf-8') for k, v in data.items()}
 
         # Create a dicument in mongo
         document = {
-            'name': dataset_name + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), #the id is the date
+            'name': dataset_name + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), #the id is the date we added th data
             'data': property_data #and the res is the data
         }
 
@@ -61,28 +61,12 @@ def from_hbase_to_mongo(mongo_database_name,mongo_dataset_name,mongo_host,mongo_
             # Find the index of the first occurrence of '.' from the end
             dot_index = table_name_str.find('.')
 
-            # Extract the part before the first '.' and after 'csv_table_'
-
-            # dataset_name = table_name_str[table_name_str.find('csv_table_') + len('csv_table_'):dot_index]
-            # print(dataset_name)
-            # year = int(table_name_str.split('_')[2]) #Get the year of the name
-
             process_csv(connection, db, table_name_str,mongo_dataset_name)  #execute the function to load all table into mongo
 
 
-        elif table_name_str.startswith('json_table_'): #if the table detected is a csv
-            
-            # try:
-                # date_parts = table_name_str.split('_')[2:5]  #Get the date
-                # date_str = '_'.join(date_parts)
+        elif table_name_str.startswith('json_table_'): #if the table detected is a csv           
             dot_index = table_name_str.find('.')
-
-            # dataset_name = table_name_str[table_name_str.find('json_table_') + len('json_table_'):dot_index]
-            # print(dataset_name)
             process_json(connection, db, table_name_str, mongo_dataset_name)  #execute the function to load all table into mongo
-
-            # except ValueError as e:
-            #     print(f"Error al procesar la fecha del nombre de la tabla {table_name_str}: {e}")
 
         print(table_name_str + " added to Persistent Landing")
     # Close connections
