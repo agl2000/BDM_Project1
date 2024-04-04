@@ -50,7 +50,7 @@ def consult_persistent_landing(host,port):
 
 
 def get_data_from_collection(host, port, database_name, collection_name):
-    # Establecer la conexión a MongoDB
+    # Establish connection with MongoDB
     client = pymongo.MongoClient(host, port)
     db = client[database_name]
 
@@ -140,13 +140,10 @@ def main():
 
     # List collections MongoDB
     mongodb_collections=get_mongodb_collections(mongodb_host, mongodb_port, database_name)
-    # print(mongodb_collections)
 
     #Define all the Hbase variables to connect
     # HBase host
     hbase_host = '192.168.100.169'  # Replace with your HBase host IP address
-    # hbase_host = '192.168.1.47'  # Replace with your HBase host IP address
-
     hbase_port = 9090
 
 
